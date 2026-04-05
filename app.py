@@ -146,24 +146,24 @@ def signup():
         return redirect(url_for('login'))
     return render_template('signup.html')
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        remember = True if request.form.get('remember') else False
-        
-        user = User.query.filter_by(email=email).first()
-        if user and bcrypt.check_password_hash(user.password, password):
-            login_user(user, remember=remember)
-            next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('dashboard'))
-        else:
-            flash('Login unsuccessful. Please check email and password.', 'danger')
-    return render_template('login.html')
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
 
+        if not email or not password:
+            return render_template("login.html", error="Please enter email and password")
+
+        user = User.query.filter_by(email=email).first()
+
+        if user and bcrypt.check_password_hash(user.password, password):
+            session["user"] = email
+            return redirect(url_for("dashboard"))
+
+        return render_template("login.html", error="Invalid credentials")
+
+    return render_template("login.html")
 @app.route('/logout')
 def logout():
     logout_user()
