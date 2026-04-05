@@ -1,6 +1,7 @@
 services:
   - type: web
     name: churnshield-backend
+    plan: free
     env: python
     buildCommand: pip install -r requirements.txt && python train_model.py
     startCommand: gunicorn app:app
@@ -14,5 +15,6 @@ services:
 
 databases:
   - name: churnshield-db
+    plan: free
     databaseName: churnshield
     user: churnshield_user
