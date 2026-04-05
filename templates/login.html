@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - ChurnShield AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --input-focus: #3b82f6;
+            --muted-text: #94a3b8;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .login-wrapper {
+            display: flex;
+            height: 100vh;
+        }
+
+        .login-left {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10%;
+            background: #fff;
+        }
+
+        .login-right {
+            flex: 1.2;
+            background: #000;
+            background-image: url('{{ url_for("static", filename="img/login_bg.png") }}');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .login-form-container {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .site-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3.5rem;
+        }
+
+        .brand-icon {
+            width: 48px;
+            height: 48px;
+            background: #1e3a8a;
+            color: #fff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .brand-text-block h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+            color: #1e293b;
+            letter-spacing: -0.01em;
+        }
+
+        .brand-text-block span {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--muted-text);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .welcome-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: #0f172a;
+        }
+
+        .welcome-subtitle {
+            font-size: 0.9375rem;
+            color: var(--muted-text);
+            margin-bottom: 2.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.025em;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.875rem 1.25rem;
+            font-size: 0.9375rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #1e293b;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--input-focus);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            cursor: pointer;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .remember-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #64748b;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: #1e3a8a;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .btn-signin {
+            width: 100%;
+            padding: 1rem;
+            background: #1e3a8a;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.9375rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-signin:hover {
+            background: #1a365d;
+            transform: translateY(-1px);
+        }
+
+        .signup-footer {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .signup-footer a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        @media (max-width: 1024px) {
+            .login-right {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-left">
+            <div class="login-form-container">
+                <div class="site-brand">
+                    <div class="brand-icon">
+                        <i class="fas fa-shield-halved"></i>
+                    </div>
+                    <div class="brand-text-block">
+                        <h1>ChurnShield AI</h1>
+                        <span>PREDICT. ENGAGE. RETAIN.</span>
+                    </div>
+                </div>
+
+                <h2 class="welcome-title">Welcome back</h2>
+                <p class="welcome-subtitle">Sign in to access your dashboard.</p>
+
+                <form action="{{ url_for('login') }}" method="POST">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <div class="input-wrapper">
+                            <input type="email" name="email" class="form-input" placeholder="you@company.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" name="password" id="password-input" class="form-input" placeholder="••••••" required>
+                            <i class="far fa-eye password-toggle" id="toggle-password"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="remember-label">
+                            <input type="checkbox" name="remember"> Remember me
+                        </label>
+                        <a href="#" class="forgot-link">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-signin">
+                        Sign In <i class="fas fa-arrow-right"></i>
+                    </button>
+                    
+                    <div class="signup-footer">
+                        Don't have an account? <a href="{{ url_for('signup') }}">Create one here</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="login-right">
+            <!-- Abstract Image via CSS Background -->
+        </div>
+    </div>
+
+    <script>
+        const passwordInput = document.getElementById('password-input');
+        const toggleBtn = document.getElementById('toggle-password');
+
+        toggleBtn.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            toggleBtn.classList.toggle('fa-eye');
+            toggleBtn.classList.toggle('fa-eye-slash');
+        });
+    </script>
+</body>
+</html>

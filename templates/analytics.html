@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - ChurnShield AI{% endblock %}
+
+{% block page_title %}Analytics{% endblock %}
+{% block page_subtitle %}Comprehensive churn prediction insights{% endblock %}
+
+{% block top_bar_actions %}
+    <button class="btn" style="border: 1px solid var(--border); font-size: 0.8125rem;"><i class="fas fa-download"></i> Export CSV</button>
+{% endblock %}
+
+{% block content %}
+    <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
+        <div class="card">
+            <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1.5rem;">
+                <i class="fas fa-clock-rotate-left" style="color: var(--secondary);"></i>
+                <h3 style="font-weight: 700;">Risk Distribution</h3>
+            </div>
+            <div style="height: 250px; display: flex; align-items: center; justify-content: center;">
+                <canvas id="riskDoughnut"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1.5rem;">
+                <i class="fas fa-chart-line" style="color: var(--secondary);"></i>
+                <h3 style="font-weight: 700;">Prediction Timeline</h3>
+            </div>
+            <div style="height: 250px;">
+                <canvas id="timelineBar"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 style="font-weight: 700; margin-bottom: 1.5rem;">Customer Segmentation</h3>
+        <div class="table-container">
+            <table class="prediction-table">
+                <thead>
+                    <tr>
+                        <th>SEGMENT</th>
+                        <th>CUSTOMERS</th>
+                        <th>% OF TOTAL</th>
+                        <th>RECOMMENDED ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-high">High Risk</span></td>
+                        <td style="font-weight: 600;">{{ high }}</td>
+                        <td>{{ high_pct }}%</td>
+                        <td style="color: var(--text-muted);">20% discount + free shipping</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-medium">Medium Risk</span></td>
+                        <td style="font-weight: 600;">{{ medium }}</td>
+                        <td>{{ med_pct }}%</td>
+                        <td style="color: var(--text-muted);">10% discount + loyalty points</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-low">Low Risk</span></td>
+                        <td style="font-weight: 600;">{{ low }}</td>
+                        <td>{{ low_pct }}%</td>
+                        <td style="color: var(--text-muted);">Engagement email reminder</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    new Chart(document.getElementById('riskDoughnut'), {
+        type: 'doughnut',
+        data: {
+            labels: ['High', 'Medium', 'Low'],
+            datasets: [{ data: [{{ high }}, {{ medium }}, {{ low }}], backgroundColor: ['#ef4444', '#f59e0b', '#22c55e'], borderWidth: 0 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+    });
+
+    const timelineData = {{ timeline | tojson }};
+    new Chart(document.getElementById('timelineBar'), {
+        type: 'bar',
+        data: {
+            labels: timelineData.map(t => t.date),
+            datasets: [{ label: 'Predictions', data: timelineData.map(t => t.count), backgroundColor: '#1e3a8a', borderRadius: 6 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } } }
+    });
+</script>
+{% endblock %}

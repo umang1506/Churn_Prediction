@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - ChurnShield AI{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Welcome back, {{ current_user.full_name.split(' ')[0] }}{% endblock %}
+
+{% block top_bar_actions %}
+    <button onclick="resetDashboard()" class="btn" title="Reset All Data" style="background: rgba(239, 68, 68, 0.1); border: 1.5px solid rgba(239, 68, 68, 0.2); color: #ef4444; width: 40px; height: 40px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center;">
+        <i class="fas fa-rotate"></i>
+    </button>
+    <div style="position: relative;" id="notif-wrapper">
+        <button id="notif-btn" class="btn" style="background: none; border: none; padding: 0.5rem; position: relative;">
+            <i class="far fa-bell" style="font-size: 1.25rem; color: var(--text-muted);"></i>
+            <span id="notif-dot" style="position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background-color: var(--danger); border-radius: 50%; display: none; border: 2px solid var(--bg-light);"></span>
+        </button>
+        <div id="notif-dropdown" style="display: none; position: absolute; top: 110%; right: 0; width: 320px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-lg); z-index: 1000; max-height: 480px; overflow-y: auto;">
+            <div style="padding: 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <h4 style="margin: 0; font-size: 0.875rem;">Recent Activity</h4>
+                <span id="notif-count" style="font-size: 0.75rem; color: var(--text-muted);">0 new</span>
+            </div>
+            <div id="notif-list"></div>
+            <div style="padding: 0.75rem; text-align: center; border-top: 1px solid var(--border);">
+                <button onclick="markAllRead()" style="background: none; border: none; color: var(--secondary); font-size: 0.75rem; font-weight: 600; cursor: pointer;">Mark all as read</button>
+            </div>
+        </div>
+    </div>
+    <button class="btn btn-primary btn-lg" id="run-prediction-btn" style="min-width: 220px;">
+        <i class="fas fa-play"></i> Run Prediction
+    </button>
+{% endblock %}
+
+{% block content %}
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+        <div class="card stat-card">
+            <span class="stat-label">Total Customers Monitored</span>
+            <span class="stat-value" id="stat-customers">{{ total_customers }}</span>
+            <div class="stat-trend trend-up"><i class="fas fa-clock"></i> Updated just now</div>
+        </div>
+        <div class="card stat-card">
+            <span class="stat-label">High Risk Churn</span>
+            <span class="stat-value" style="color: var(--danger);" id="stat-high-risk">{{ high_risk_count }}</span>
+            <div class="stat-trend"><i class="fas fa-triangle-exclamation"></i> Risks identified</div>
+        </div>
+        <div class="card stat-card">
+            <span class="stat-label">Revenue at Risk</span>
+            <span class="stat-value" id="stat-revenue">₹{{ "{:,.2f}".format(revenue_at_risk) }}</span>
+            <div class="stat-trend"><i class="fas fa-indian-rupee-sign"></i> Estimated loss</div>
+        </div>
+        <div class="card stat-card">
+            <span class="stat-label">Active Retention Campaigns</span>
+            <span class="stat-value">0</span>
+            <div class="stat-trend"><i class="fas fa-check"></i> Monitoring campaigns</div>
+        </div>
+    </div>
+
+    <!-- Data Input -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                <div>
+                    <h3 style="font-weight: 700; margin-bottom: 0.25rem;">Paste Order History Link</h3>
+                    <p style="font-size: 0.8125rem; color: var(--text-muted);">Scan complete order history from Flipkart, Amazon, etc.</p>
+                </div>
+                <i class="fas fa-link" style="color: var(--secondary); opacity: 0.5;"></i>
+            </div>
+            <div class="form-group">
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="url" id="order-link-input" class="form-input" placeholder="https://www.flipkart.com/account/orders..." style="flex: 1;">
+                    <button class="btn btn-primary" id="scan-link-btn" style="padding: 0 1.5rem;">Scan</button>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <div>
+                    <h3 style="font-weight: 700; margin-bottom: 0.25rem;">Your Datasets</h3>
+                    <p style="font-size: 0.8125rem; color: var(--text-muted);">Upload CSV, Excel, or JSON exports</p>
+                </div>
+                <form id="upload-form" style="display: none;">
+                    <input type="file" id="dataset-upload" name="file" accept=".csv,.xls,.xlsx">
+                </form>
+                <button class="btn btn-lg" id="upload-btn" style="border: 1px solid var(--border); background: var(--bg-card);">+ Upload New</button>
+            </div>
+            <div id="dataset-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                {% if datasets %}
+                    {% for ds in datasets %}
+                    <div class="dataset-item" data-id="{{ ds.id }}" onclick="selectDataset(this)" style="background-color: var(--bg-light); padding: 0.5rem 0.75rem; border-radius: 8px; border: 1.5px solid var(--border); font-size: 0.75rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.2s ease;" id="ds-container-{{ ds.id }}">
+                        <i class="far fa-file-excel" style="color: #10b981;"></i>
+                        <span style="font-weight: 600;">{{ ds.filename }}</span>
+                        <span style="color: var(--text-muted);">({{ ds.row_count }} rows)</span>
+                        <button onclick="deleteDataset({{ ds.id }}, event)" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 2px;">
+                            <i class="fas fa-trash-can" style="font-size: 0.7rem;"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="font-size: 0.8125rem; color: var(--text-muted); opacity: 0.7;">No datasets uploaded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Prediction Results -->
+    <div class="card animate-fade-in" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="font-weight: 700;">Prediction Results</h3>
+            <div style="display: flex; gap: 1rem; font-size: 0.75rem; font-weight: 600;">
+                <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--danger);"></span> High: <span id="count-high">{{ high_risk_count }}</span></span>
+                <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--warning);"></span> Medium: 0</span>
+                <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--success);"></span> Low: 0</span>
+            </div>
+        </div>
+        <div class="table-container">
+            <table id="prediction-table">
+                <thead>
+                    <tr>
+                        <th>CUSTOMER ID</th>
+                        <th>CHURN PROBABILITY</th>
+                        <th>RISK</th>
+                        <th>LOYALTY</th>
+                        <th>REVENUE LOSS</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-muted);">Run a prediction to see customer risk analysis.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Charts and Recent -->
+    <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 1.5rem;">
+        <div class="card">
+            <h3 style="font-weight: 700; margin-bottom: 1.5rem;">Churn Distribution</h3>
+            <div style="height: 250px; position: relative;">
+                <canvas id="churnChart"></canvas>
+                <div id="chart-placeholder" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: var(--text-muted); opacity: 0.5;">
+                    <i class="fas fa-chart-donut" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                    No data
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <h3 style="font-weight: 700; margin-bottom: 1rem;">Recent Predictions</h3>
+            <div id="recent-list">
+                {% for pred in predictions %}
+                <div style="padding: 1rem 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p style="font-size: 0.8125rem; font-weight: 600; margin-bottom: 2px;">customer_{{ pred.customer_id }}.json</p>
+                        <p style="font-size: 0.75rem; color: var(--text-muted);">{{ pred.created_at.strftime('%m/%d/%Y') }} - {{ pred.risk_level }} Risk</p>
+                    </div>
+                    <span class="badge badge-{{ pred.risk_level | lower }}">{{ pred.risk_level }}</span>
+                </div>
+                {% else %}
+                <p style="padding: 2rem 0; text-align: center; color: var(--text-muted); opacity: 0.7;">No recent activity.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const scanBtn = document.getElementById('scan-link-btn');
+    const linkInput = document.getElementById('order-link-input');
+    const runPredBtn = document.getElementById('run-prediction-btn');
+    const predictionTable = document.querySelector('#prediction-table tbody');
+    const uploadBtn = document.getElementById('upload-btn');
+    const fileInput = document.getElementById('dataset-upload');
+
+    let selectedDatasetId = null;
+
+    function selectDataset(el) {
+        document.querySelectorAll('.dataset-item').forEach(item => {
+            item.style.borderColor = 'var(--border)';
+            item.style.backgroundColor = 'var(--bg-light)';
+        });
+        el.style.borderColor = 'var(--secondary)';
+        el.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
+        selectedDatasetId = el.getAttribute('data-id');
+    }
+
+    uploadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', async (e) => {
+        if (!e.target.files.length) return;
+        const formData = new FormData();
+        formData.append('file', e.target.files[0]);
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+        try {
+            const response = await fetch('/api/upload-dataset', { method: 'POST', body: formData });
+            const result = await response.json();
+            if (result.success) location.reload();
+            else alert('Upload failed: ' + result.error);
+        } catch (err) { alert('Upload error.'); }
+        finally { uploadBtn.innerHTML = '+ Upload New'; }
+    });
+
+    scanBtn.addEventListener('click', async () => {
+        const url = linkInput.value;
+        if (!url) return alert('Paste a link!');
+        scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
+        scanBtn.disabled = true;
+        try {
+            const response = await fetch('/api/scan-link', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+            const result = await response.json();
+            if (result.success) { location.reload(); }
+            else alert('Scan failed: ' + result.error);
+        } catch (err) { alert('Scan error.'); }
+        finally { scanBtn.innerHTML = 'Scan'; scanBtn.disabled = false; }
+    });
+
+    runPredBtn.addEventListener('click', async () => {
+        if (!selectedDatasetId) {
+            const firstDataset = document.querySelector('.dataset-item');
+            if (!firstDataset) return alert('Upload a dataset first');
+            selectDataset(firstDataset);
+        }
+        
+        runPredBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
+        runPredBtn.disabled = true;
+        try {
+            const response = await fetch('/api/predict', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dataset_id: selectedDatasetId }) });
+            const result = await response.json();
+            if (result.success) {
+                predictionTable.innerHTML = '';
+                let high = 0, med = 0, low = 0;
+                result.predictions.forEach(p => {
+                    if (p.risk_level === 'High') high++;
+                    else if (p.risk_level === 'Medium') med++;
+                    else low++;
+                    predictionTable.innerHTML += `
+                        <tr>
+                            <td>${p.customer_id}</td>
+                            <td><div class="progress-container"><div class="progress-bar" style="width: ${p.churn_probability * 100}%; background-color: var(--${p.risk_level.toLowerCase()});"></div></div></td>
+                            <td><span class="badge badge-${p.risk_level.toLowerCase()}">${p.risk_level}</span></td>
+                            <td>${((1-p.churn_probability)*100).toFixed(1)}%</td>
+                            <td>₹${(p.churn_probability * 10).toFixed(2)}</td>
+                            <td><a href="/retention?to=${p.customer_id}" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;"><i class="fas fa-gift"></i> Offer</a></td>
+                        </tr>`;
+                });
+                document.getElementById('chart-placeholder').style.display = 'none';
+                initChart(high, med, low);
+            } else alert('Failed: ' + result.error);
+        } catch (err) { alert('Error.'); }
+        finally { runPredBtn.innerHTML = '<i class="fas fa-play"></i> Run Prediction'; runPredBtn.disabled = false; }
+    });
+
+    function initChart(high, med, low) {
+        new Chart(document.getElementById('churnChart'), {
+            type: 'doughnut',
+            data: { labels: ['High', 'Medium', 'Low'], datasets: [{ data: [high, med, low], backgroundColor: ['#ef4444', '#f59e0b', '#22c55e'], borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    async function deleteDataset(id, event) {
+        if (event) event.stopPropagation();
+        if (!confirm("Delete dataset?")) return;
+        const res = await fetch(`/api/delete-dataset/${id}`, { method: 'DELETE' });
+        const result = await res.json();
+        if (result.success) location.reload();
+    }
+
+    async function resetDashboard() {
+        if (confirm("Reset EVERYTHING?") && confirm("Final confirmation?")) {
+            const res = await fetch('/api/reset-account', { method: 'POST' });
+            if ((await res.json()).success) location.reload();
+        }
+    }
+
+    async function fetchNotifications() {
+        try {
+            const res = await fetch('/api/notifications');
+            const data = await res.json();
+            const list = document.getElementById('notif-list');
+            const dot = document.getElementById('notif-dot');
+            let unread = data.filter(n => !n.read).length;
+            dot.style.display = unread > 0 ? 'block' : 'none';
+            document.getElementById('notif-count').innerText = `${unread} new`;
+            if (!data.length) { list.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-muted);">No notifications</div>'; return; }
+            list.innerHTML = data.map(n => `<div style="padding: 1rem; border-bottom: 1px solid var(--border); ${n.read ? 'opacity: 0.6;' : 'background: rgba(59,130,246,0.03);'}"><strong>${n.title}</strong><p style="margin:0; font-size: 0.75rem;">${n.message}</p></div>`).join('');
+        } catch (err) {}
+    }
+
+    async function markAllRead() { await fetch('/api/mark-read', { method: 'POST' }); fetchNotifications(); }
+    document.getElementById('notif-btn').addEventListener('click', (e) => { e.stopPropagation(); const d = document.getElementById('notif-dropdown'); d.style.display = d.style.display === 'none' ? 'block' : 'none'; });
+    document.addEventListener('click', () => document.getElementById('notif-dropdown').style.display = 'none');
+    setInterval(fetchNotifications, 30000); fetchNotifications();
+</script>
+{% endblock %}

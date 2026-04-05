@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - ChurnShield AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0a0e1a; color: #e2e8f0; min-height: 100vh; }
+        
+        .hero { padding: 4rem 2rem 3rem; text-align: center; background: linear-gradient(135deg, #0a0e1a 0%, #1e293b 100%); border-bottom: 1px solid #1e293b; }
+        .hero h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.75rem; }
+        .hero h1 span { background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { color: #94a3b8; font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+        
+        .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+        
+        .section { margin-bottom: 3rem; }
+        .section h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .section h2 i { color: #3b82f6; }
+        .section p { color: #94a3b8; line-height: 1.7; margin-bottom: 1rem; }
+        
+        .badge-method { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .badge-post { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .badge-get { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+        
+        .endpoint { background: #111827; border: 1px solid #1e293b; border-radius: 12px; margin-bottom: 1.5rem; overflow: hidden; }
+        .endpoint-header { padding: 1rem 1.5rem; display: flex; align-items: center; gap: 0.75rem; border-bottom: 1px solid #1e293b; }
+        .endpoint-path { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.9rem; }
+        .endpoint-desc { padding: 0.75rem 1.5rem; font-size: 0.85rem; color: #94a3b8; border-bottom: 1px solid #1e293b; }
+        
+        .code-block { background: #0d1117; padding: 1.25rem 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.8; overflow-x: auto; position: relative; }
+        .code-block .comment { color: #6a737d; }
+        .code-block .string { color: #a5d6ff; }
+        .code-block .key { color: #ff7b72; }
+        .code-block .value { color: #79c0ff; }
+        
+        .copy-btn { position: absolute; top: 0.75rem; right: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid #30363d; color: #8b949e; padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: all 0.2s; }
+        .copy-btn:hover { background: rgba(255,255,255,0.1); color: #e6edf3; }
+        
+        .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin: 2rem 0; }
+        .step { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 1.5rem; text-align: center; }
+        .step-num { width: 40px; height: 40px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; margin: 0 auto 1rem; }
+        .step h3 { font-size: 0.95rem; margin-bottom: 0.5rem; }
+        .step p { font-size: 0.8rem; color: #94a3b8; }
+        
+        .response-example { background: #0d1117; border: 1px solid #1e293b; border-radius: 12px; padding: 1.25rem 1.5rem; margin: 1rem 0; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.8; overflow-x: auto; }
+        
+        .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; border-bottom: 1px solid #1e293b; }
+        .nav-bar a { color: #94a3b8; text-decoration: none; font-size: 0.875rem; transition: color 0.2s; }
+        .nav-bar a:hover { color: #3b82f6; }
+        .nav-brand { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.1rem; color: white; }
+        
+        .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin: 2rem 0; }
+        .plan-card { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 2rem; text-align: center; }
+        .plan-card.featured { border-color: #3b82f6; background: linear-gradient(180deg, rgba(59,130,246,0.05), #111827); }
+        .plan-card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .plan-price { font-size: 2rem; font-weight: 800; margin: 1rem 0; }
+        .plan-price span { font-size: 0.875rem; color: #94a3b8; font-weight: 400; }
+        .plan-feat { list-style: none; text-align: left; font-size: 0.8rem; color: #94a3b8; }
+        .plan-feat li { padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem; }
+        .plan-feat li i { color: #22c55e; font-size: 0.7rem; }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="nav-brand">
+            <i class="fas fa-shield-halved" style="color: #3b82f6;"></i>
+            ChurnShield API
+        </div>
+        <div style="display: flex; gap: 1.5rem;">
+            <a href="{{ url_for('dashboard') }}"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <a href="#endpoints">Endpoints</a>
+            <a href="#quickstart">Quick Start</a>
+            <a href="#pricing">Pricing</a>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <h1>ChurnShield <span>API v1</span></h1>
+        <p>Integrate AI-powered churn prediction into your app. Works with Flipkart, Amazon, Zomato, or any business.</p>
+    </div>
+
+    <div class="container">
+        <!-- Quick Start -->
+        <div class="section" id="quickstart">
+            <h2><i class="fas fa-rocket"></i> Quick Start</h2>
+            <p>Get churn predictions for your customers in 3 simple steps:</p>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <h3>Create Account</h3>
+                    <p>Sign up on ChurnShield and go to Settings.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <h3>Generate API Key</h3>
+                    <p>Create an API key from the dashboard.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <h3>Send Requests</h3>
+                    <p>Upload CSV or send JSON to get predictions.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auth -->
+        <div class="section">
+            <h2><i class="fas fa-key"></i> Authentication</h2>
+            <p>All API requests require an <code style="background: #1e293b; padding: 0.15rem 0.5rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">X-API-Key</code> header.</p>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+<span class="comment"># Include this header in every request</span>
+X-API-Key: cs_your_api_key_here
+            </div>
+        </div>
+
+        <!-- Endpoints -->
+        <div class="section" id="endpoints">
+            <h2><i class="fas fa-plug"></i> Endpoints</h2>
+
+            <!-- Predict File -->
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="badge-method badge-post">POST</span>
+                    <span class="endpoint-path">/api/v1/predict</span>
+                </div>
+                <div class="endpoint-desc">Upload a CSV or Excel file to get churn predictions for all customers.</div>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+<span class="comment"># Python Example</span>
+<span class="key">import</span> requests
+
+url = <span class="string">"https://churnshield.ai/api/v1/predict"</span>
+headers = {<span class="string">"X-API-Key"</span>: <span class="string">"cs_your_key"</span>}
+files = {<span class="string">"file"</span>: open(<span class="string">"customers.csv"</span>, <span class="string">"rb"</span>)}
+
+response = requests.post(url, headers=headers, files=files)
+print(response.json())
+                </div>
+            </div>
+
+            <!-- Predict JSON -->
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="badge-method badge-post">POST</span>
+                    <span class="endpoint-path">/api/v1/predict-json</span>
+                </div>
+                <div class="endpoint-desc">Send customer data as JSON for real-time predictions. Perfect for integration with your backend.</div>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+<span class="comment"># Python Example</span>
+<span class="key">import</span> requests
+
+url = <span class="string">"https://churnshield.ai/api/v1/predict-json"</span>
+headers = {
+    <span class="string">"X-API-Key"</span>: <span class="string">"cs_your_key"</span>,
+    <span class="string">"Content-Type"</span>: <span class="string">"application/json"</span>
+}
+data = {
+    <span class="string">"customers"</span>: [
+        {<span class="string">"customer_id"</span>: <span class="string">"C001"</span>, <span class="string">"tenure"</span>: 12, <span class="string">"total_charges"</span>: 500},
+        {<span class="string">"customer_id"</span>: <span class="string">"C002"</span>, <span class="string">"tenure"</span>: 45, <span class="string">"total_charges"</span>: 3200},
+        {<span class="string">"customer_id"</span>: <span class="string">"C003"</span>, <span class="string">"tenure"</span>: 2, <span class="string">"total_charges"</span>: 80}
+    ]
+}
+
+response = requests.post(url, headers=headers, json=data)
+print(response.json())
+                </div>
+            </div>
+
+            <!-- Usage -->
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="badge-method badge-get">GET</span>
+                    <span class="endpoint-path">/api/v1/usage</span>
+                </div>
+                <div class="endpoint-desc">Check your organization's API usage and remaining quota.</div>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+curl -H <span class="string">"X-API-Key: cs_your_key"</span> https://churnshield.ai/api/v1/usage
+                </div>
+            </div>
+
+            <!-- Response Example -->
+            <h3 style="margin: 2rem 0 1rem; font-weight: 700;">Sample Response</h3>
+            <div class="response-example">
+<pre style="margin: 0;">{
+  <span class="string">"success"</span>: true,
+  <span class="string">"organization"</span>: <span class="string">"Flipkart"</span>,
+  <span class="string">"total_customers"</span>: 3,
+  <span class="string">"predictions"</span>: [
+    {
+      <span class="string">"customer_id"</span>: <span class="string">"C001"</span>,
+      <span class="string">"churn_probability"</span>: 0.8421,
+      <span class="string">"risk_level"</span>: <span class="string">"High"</span>,
+      <span class="string">"loyalty_score"</span>: 0.1579,
+      <span class="string">"revenue_at_risk"</span>: 84.21,
+      <span class="string">"recommended_action"</span>: <span class="string">"20% discount + priority support"</span>
+    },
+    {
+      <span class="string">"customer_id"</span>: <span class="string">"C002"</span>,
+      <span class="string">"churn_probability"</span>: 0.2103,
+      <span class="string">"risk_level"</span>: <span class="string">"Low"</span>,
+      <span class="string">"loyalty_score"</span>: 0.7897,
+      <span class="string">"revenue_at_risk"</span>: 21.03,
+      <span class="string">"recommended_action"</span>: <span class="string">"Loyalty points reminder"</span>
+    }
+  ]
+}</pre>
+            </div>
+        </div>
+
+        <!-- Supported Formats -->
+        <div class="section">
+            <h2><i class="fas fa-database"></i> Supported Data Formats</h2>
+            <p>ChurnShield auto-detects your schema. No rigid format required.</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                <div style="background: #111827; border: 1px solid #1e293b; border-radius: 8px; padding: 1.25rem;">
+                    <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem;"><i class="fas fa-shopping-cart" style="color: #f59e0b;"></i> E-Commerce (Flipkart, Amazon)</h4>
+                    <p style="font-size: 0.8rem; color: #64748b;">customer_id, order_date, amount, status, returns</p>
+                </div>
+                <div style="background: #111827; border: 1px solid #1e293b; border-radius: 8px; padding: 1.25rem;">
+                    <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem;"><i class="fas fa-utensils" style="color: #ef4444;"></i> Food Delivery (Zomato, Swiggy)</h4>
+                    <p style="font-size: 0.8rem; color: #64748b;">user_id, order_date, total_spend, frequency</p>
+                </div>
+                <div style="background: #111827; border: 1px solid #1e293b; border-radius: 8px; padding: 1.25rem;">
+                    <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem;"><i class="fas fa-wifi" style="color: #3b82f6;"></i> Telecom (Jio, Airtel)</h4>
+                    <p style="font-size: 0.8rem; color: #64748b;">customer_id, tenure, monthly_charges, churn</p>
+                </div>
+                <div style="background: #111827; border: 1px solid #1e293b; border-radius: 8px; padding: 1.25rem;">
+                    <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem;"><i class="fas fa-film" style="color: #8b5cf6;"></i> Streaming (Netflix, Hotstar)</h4>
+                    <p style="font-size: 0.8rem; color: #64748b;">account_id, subscription_months, total_charges</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing -->
+        <div class="section" id="pricing">
+            <h2><i class="fas fa-tags"></i> Plans &amp; Pricing</h2>
+            <div class="plans">
+                <div class="plan-card">
+                    <h3>Free</h3>
+                    <div class="plan-price">₹0 <span>/mo</span></div>
+                    <ul class="plan-feat">
+                        <li><i class="fas fa-check"></i> 1,000 API calls/month</li>
+                        <li><i class="fas fa-check"></i> CSV & Excel support</li>
+                        <li><i class="fas fa-check"></i> 1 API key</li>
+                        <li><i class="fas fa-check"></i> Dashboard access</li>
+                    </ul>
+                </div>
+                <div class="plan-card featured">
+                    <h3>Pro</h3>
+                    <div class="plan-price" style="color: #3b82f6;">₹2,999 <span>/mo</span></div>
+                    <ul class="plan-feat">
+                        <li><i class="fas fa-check"></i> 50,000 API calls/month</li>
+                        <li><i class="fas fa-check"></i> JSON + File upload</li>
+                        <li><i class="fas fa-check"></i> 10 API keys</li>
+                        <li><i class="fas fa-check"></i> Webhook integration</li>
+                        <li><i class="fas fa-check"></i> Priority support</li>
+                    </ul>
+                </div>
+                <div class="plan-card">
+                    <h3>Enterprise</h3>
+                    <div class="plan-price">Custom</div>
+                    <ul class="plan-feat">
+                        <li><i class="fas fa-check"></i> Unlimited API calls</li>
+                        <li><i class="fas fa-check"></i> Dedicated model training</li>
+                        <li><i class="fas fa-check"></i> On-premise deployment</li>
+                        <li><i class="fas fa-check"></i> SLA guarantee</li>
+                        <li><i class="fas fa-check"></i> Custom integrations</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer style="text-align: center; padding: 3rem; color: #475569; font-size: 0.8rem; border-top: 1px solid #1e293b;">
+        &copy; 2026 ChurnShield AI. All rights reserved.
+    </footer>
+
+    <script>
+        function copyCode(btn) {
+            const code = btn.parentElement.innerText.replace('Copy', '').trim();
+            navigator.clipboard.writeText(code);
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied';
+            setTimeout(() => btn.innerHTML = '<i class="fas fa-copy"></i> Copy', 2000);
+        }
+    </script>
+</body>
+</html>

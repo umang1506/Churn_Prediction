@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ChurnShield AI{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    {% block head %}{% endblock %}
+</head>
+<body class="dashboard-container">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-shield-halved" style="color: var(--secondary); font-size: 2rem;"></i>
+            <div style="line-height: 1.1;">
+                <span style="font-size: 1.25rem; font-weight: 700; display: block;">ChurnShield</span>
+                <span style="font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em;">AI RETENTION</span>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <p style="padding: 0 1.5rem; font-size: 0.65rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 0.5rem;">Navigation</p>
+            <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.path == url_for('dashboard') %}active{% endif %}">
+                <i class="fas fa-grid-2"></i> Dashboard
+            </a>
+            <a href="{{ url_for('retention') }}" class="nav-link {% if request.path == url_for('retention') %}active{% endif %}">
+                <i class="fas fa-gift"></i> Retention
+            </a>
+            <a href="{{ url_for('analytics') }}" class="nav-link {% if request.path == url_for('analytics') %}active{% endif %}">
+                <i class="fas fa-chart-simple"></i> Analytics
+            </a>
+            <a href="{{ url_for('customers') }}" class="nav-link {% if request.path == url_for('customers') %}active{% endif %}">
+                <i class="fas fa-users"></i> Customers
+            </a>
+            <a href="{{ url_for('settings') }}" class="nav-link {% if request.path == url_for('settings') %}active{% endif %}">
+                <i class="fas fa-gear"></i> Settings
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <div class="user-info" style="margin-bottom: 1.5rem;">
+                <div class="avatar">{{ current_user.full_name[0] | upper }}</div>
+                <div style="overflow: hidden;">
+                    <p style="font-size: 0.875rem; font-weight: 600; margin-bottom: -2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ current_user.full_name }}</p>
+                    <p style="font-size: 0.75rem; color: #94a3b8; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{{ current_user.email }}</p>
+                </div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn btn-block" style="background: rgba(255,255,255,0.05); color: white; justify-content: flex-start; padding: 0.5rem 1rem;">
+                <i class="fas fa-arrow-right-from-bracket"></i> Sign Out
+            </a>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-bar">
+            <div>
+                <h2 class="page-title">{% block page_title %}{% endblock %}</h2>
+                <p style="font-size: 0.875rem; color: var(--text-muted);">{% block page_subtitle %}{% endblock %}</p>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <button id="theme-toggle" onclick="toggleTheme()" class="btn" style="background: var(--bg-card); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 50%; padding: 0;">
+                    <i class="fas fa-moon"></i>
+                </button>
+                {% block top_bar_actions %}{% endblock %}
+            </div>
+        </header>
+
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

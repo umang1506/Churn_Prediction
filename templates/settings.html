@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - ChurnShield AI{% endblock %}
+
+{% block page_title %}Settings{% endblock %}
+{% block page_subtitle %}Manage your account details and security{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="card">
+        <h3 style="font-weight: 700; margin-bottom: 2rem;">User Profile</h3>
+        <form id="settings-form">
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-user"></i> Full Name</label>
+                <input type="text" name="full_name" class="form-input" value="{{ current_user.full_name or '' }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-envelope"></i> Email Address</label>
+                <input type="email" name="email" class="form-input" value="{{ current_user.email or '' }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-phone"></i> Phone Number</label>
+                <input type="tel" name="phone" id="phone-input" class="form-input" value="{{ current_user.phone_number or '' }}" placeholder="+91 00000 00000">
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 2rem 0;">
+            
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-lock"></i> New Password (leave blank to keep current)</label>
+                <input type="password" name="password" id="password-input" class="form-input" placeholder="••••••••">
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary btn-block" id="save-btn" style="height: 50px; font-weight: 700;">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+        <div id="status-msg" style="margin-top: 1rem; text-align: center; font-size: 0.875rem; display: none; padding: 0.75rem; border-radius: 8px;"></div>
+    </div>
+    
+    <div class="card" style="margin-top: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="font-weight: 700;"><i class="fas fa-key" style="color: var(--secondary);"></i> API Keys</h3>
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="/api/docs" class="btn" style="border: 1px solid var(--border); font-size: 0.75rem;"><i class="fas fa-book"></i> API Docs</a>
+                <button class="btn btn-primary" style="font-size: 0.75rem;" onclick="createApiKey()"><i class="fas fa-plus"></i> Generate Key</button>
+            </div>
+        </div>
+        <p style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1.25rem;">Use API keys to integrate ChurnShield with your application (Flipkart, Amazon, Zomato, etc).</p>
+        
+        <div id="new-key-banner" style="display: none; background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
+            <p style="font-size: 0.8rem; font-weight: 600; color: #22c55e; margin-bottom: 0.5rem;"><i class="fas fa-check-circle"></i> Key Created! Copy it now — it won't be shown in full again.</p>
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="new-key-value" readonly class="form-input" style="font-family: monospace; font-size: 0.8rem; flex: 1;">
+                <button class="btn btn-primary" style="font-size: 0.75rem;" onclick="navigator.clipboard.writeText(document.getElementById('new-key-value').value); this.innerHTML='Copied!'"><i class="fas fa-copy"></i> Copy</button>
+            </div>
+        </div>
+        
+        <div id="api-keys-list" style="font-size: 0.85rem;">
+            <p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading keys...</p>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 1.5rem; border: 1.5px solid rgba(239, 68, 68, 0.2);">
+        <h3 style="font-weight: 700; color: var(--danger); margin-bottom: 1rem;">Danger Zone</h3>
+        <p style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1.5rem;">Permanently delete your account and all associated data.</p>
+        <button class="btn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">Delete Account</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // --- Profile Settings ---
+    document.getElementById('settings-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('save-btn');
+        const statusMsg = document.getElementById('status-msg');
+        const formData = new FormData(this);
+        
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        btn.disabled = true;
+        statusMsg.style.display = 'none';
+        
+        try {
+            const response = await fetch('/api/update-settings', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                statusMsg.innerText = result.message;
+                statusMsg.style.backgroundColor = 'rgba(34, 197, 94, 0.1)';
+                statusMsg.style.color = '#22c55e';
+                statusMsg.style.display = 'block';
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                statusMsg.innerText = result.error;
+                statusMsg.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                statusMsg.style.color = '#ef4444';
+                statusMsg.style.display = 'block';
+            }
+        } catch (err) {
+            statusMsg.innerText = 'Server error. Please try again.';
+            statusMsg.style.display = 'block';
+        } finally {
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+            btn.disabled = false;
+        }
+    });
+
+    // --- API Key Management ---
+    async function loadApiKeys() {
+        try {
+            const res = await fetch('/api/v1/keys');
+            const keys = await res.json();
+            const list = document.getElementById('api-keys-list');
+            if (!keys.length) {
+                list.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1.5rem; opacity: 0.6;"><i class="fas fa-key" style="font-size: 1.5rem; display: block; margin-bottom: 0.75rem;"></i>No API keys yet. Generate one to integrate with your apps.</p>';
+                return;
+            }
+            list.innerHTML = keys.map(k => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.5rem; background: var(--bg-light);">
+                    <div>
+                        <span style="font-weight: 600;">${k.name}</span>
+                        <code style="margin-left: 0.5rem; font-size: 0.75rem; background: rgba(0,0,0,0.2); padding: 0.15rem 0.5rem; border-radius: 4px;">${k.key}</code>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">Last used: ${k.last_used}</span>
+                        ${k.is_active 
+                            ? `<button class="btn" onclick="revokeKey(${k.id})" style="font-size: 0.7rem; border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 0.2rem 0.5rem;"><i class="fas fa-ban"></i> Revoke</button>`
+                            : `<span style="font-size: 0.7rem; color: #ef4444;"><i class="fas fa-ban"></i> Revoked</span>`
+                        }
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            document.getElementById('api-keys-list').innerHTML = '<p style="color: var(--text-muted);">Failed to load keys.</p>';
+        }
+    }
+
+    async function createApiKey() {
+        const orgName = prompt('Organization Name (e.g., Flipkart, Zomato):');
+        if (!orgName) return;
+        try {
+            const res = await fetch('/api/v1/keys/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ organization: orgName, name: orgName + ' Key' })
+            });
+            const result = await res.json();
+            if (result.success) {
+                document.getElementById('new-key-banner').style.display = 'block';
+                document.getElementById('new-key-value').value = result.api_key;
+                loadApiKeys();
+            } else {
+                alert('Error: ' + (result.error || 'Unknown error'));
+            }
+        } catch (err) {
+            alert('Failed to create key.');
+        }
+    }
+
+    async function revokeKey(id) {
+        if (!confirm('Revoke this key? Any apps using it will lose access.')) return;
+        await fetch(`/api/v1/keys/${id}/revoke`, { method: 'POST' });
+        loadApiKeys();
+    }
+
+    // Load keys on page load
+    loadApiKeys();
+</script>
+{% endblock %}

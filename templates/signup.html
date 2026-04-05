@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - ChurnShield AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --input-focus: #3b82f6;
+            --muted-text: #94a3b8;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .signup-wrapper {
+            display: flex;
+            height: 100vh;
+        }
+
+        .signup-left {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10%;
+            background: #fff;
+        }
+
+        .signup-right {
+            flex: 1.2;
+            background: #000;
+            background-image: url('{{ url_for("static", filename="img/login_bg.png") }}');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .signup-form-container {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .site-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .brand-icon {
+            width: 48px;
+            height: 48px;
+            background: #1e3a8a;
+            color: #fff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .brand-text-block h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+            color: #1e293b;
+            letter-spacing: -0.01em;
+        }
+
+        .brand-text-block span {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--muted-text);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .welcome-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: #0f172a;
+        }
+
+        .welcome-subtitle {
+            font-size: 0.9375rem;
+            color: var(--muted-text);
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.025em;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.875rem 1.25rem;
+            font-size: 0.9375rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #1e293b;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--input-focus);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
+        }
+
+        .btn-signup {
+            width: 100%;
+            padding: 1rem;
+            background: #1e3a8a;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.9375rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-signup:hover {
+            background: #1a365d;
+            transform: translateY(-1px);
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .login-footer a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        @media (max-width: 1024px) {
+            .signup-right {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-wrapper">
+        <div class="signup-left">
+            <div class="signup-form-container">
+                <div class="site-brand">
+                    <div class="brand-icon">
+                        <i class="fas fa-shield-halved"></i>
+                    </div>
+                    <div class="brand-text-block">
+                        <h1>ChurnShield AI</h1>
+                        <span>PREDICT. ENGAGE. RETAIN.</span>
+                    </div>
+                </div>
+
+                <h2 class="welcome-title">Join ChurnShield</h2>
+                <p class="welcome-subtitle">Start predicting and retaining customers today.</p>
+
+                <form action="{{ url_for('signup') }}" method="POST">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" name="full_name" class="form-input" placeholder="Your Full Name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Business Email</label>
+                        <input type="email" name="email" class="form-input" placeholder="you@company.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" name="password" class="form-input" placeholder="Min. 8 characters" required>
+                    </div>
+
+                    <button type="submit" class="btn-signup">
+                        Create Account <i class="fas fa-arrow-right"></i>
+                    </button>
+                    
+                    <div class="login-footer">
+                        Already have an account? <a href="{{ url_for('login') }}">Sign in here</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="signup-right">
+            <!-- Same Abstract image -->
+        </div>
+    </div>
+</body>
+</html>

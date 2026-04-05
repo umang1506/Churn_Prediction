@@ -1,0 +1,16 @@
+flask
+flask-sqlalchemy
+flask-login
+flask-bcrypt
+pandas
+numpy
+scikit-learn
+xgboost
+joblib
+psycopg2-binary
+requests
+beautifulsoup4
+python-dotenv
+gunicorn
+openpyxl
+flask-cors

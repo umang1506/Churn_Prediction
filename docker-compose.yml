@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: churnshield_db
+    environment:
+      POSTGRES_DB: churnshield
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build: .
+    container_name: churnshield_web
+    command: gunicorn --bind 0.0.0.0:5000 app:app
+    volumes:
+      - .:/app
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/churnshield
+      - SECRET_KEY=churn_shield_secret_key_2024
+      - SMTP_SERVER=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USER=
+      - SMTP_PASS=
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
