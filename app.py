@@ -158,7 +158,7 @@ def login():
         user = User.query.filter_by(email=email).first()
 
         if user and bcrypt.check_password_hash(user.password, password):
-            session["user"] = email
+            login_user(user)   # IMPORTANT FIX
             return redirect(url_for("dashboard"))
 
         return render_template("login.html", error="Invalid credentials")
@@ -749,5 +749,19 @@ def init_db():
             db.session.commit()
 
 if __name__ == '__main__':
+    # Add this somewhere after you have initialized 'db' and your models
+with app.app_context():
+    db.create_all()
+
+# 1. Pull the database initialization OUTSIDE of the __main__ block
+# so Gunicorn actually runs it when it imports your app.
+with app.app_context():
+    # If you have a custom init_db() function, use it here:
     init_db()
+    
+    # OR, if you just use standard SQLAlchemy, use this:
+    # db.create_all()
+
+# 2. Keep only ONE app.run() inside the __main__ block for local testing
+if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
